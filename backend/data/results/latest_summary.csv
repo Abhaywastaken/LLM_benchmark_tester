@@ -1,0 +1,121 @@
+run_id,model,case_id,test_type,contract_name,bug_type,score,detected_bugs,total_bugs,false_positives,result,notes
+run_28ac3a02,GPT-4o,case_001,defi_trading_logic,OracleVault1734,reward_accounting_error,33,0,1,0,FAIL,Benchmark: model missed the injected vulnerability
+run_28ac3a02,GPT-4o,case_002,security_audit,LendingPool7564,oracle_manipulation,84,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-4o,case_003,patch_quality,RewardPool7878,reward_accounting_error,11,0,1,2,FAIL,Benchmark: model missed the injected vulnerability
+run_28ac3a02,GPT-4o,case_004,defi_trading_logic,SimpleAMM6460,amm_pricing_error,91,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-4o,case_005,defi_trading_logic,Vault2960,amm_pricing_error,87,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-4o,case_006,security_audit,RewardPool2440,reentrancy,93,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-4o,case_007,patch_quality,Vault7528,reward_accounting_error,84,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-4o,case_008,security_audit,OracleVault6028,reward_accounting_error,86,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-4o,case_009,security_audit,LendingPool9314,reward_accounting_error,21,0,1,1,FAIL,Benchmark: model missed the injected vulnerability
+run_28ac3a02,GPT-4o,case_010,security_audit,LendingPool7023,oracle_manipulation,90,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-4o,case_011,security_audit,OracleVault5859,amm_pricing_error,89,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-4o,case_012,security_audit,RewardPool2678,missing_access_control,90,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-4o,case_013,patch_quality,OracleVault8411,amm_pricing_error,81,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-4o,case_014,security_audit,LendingPool5326,missing_access_control,1,0,1,2,FAIL,Benchmark: model missed the injected vulnerability
+run_28ac3a02,GPT-4o,case_015,security_audit,OracleVault1605,reward_accounting_error,80,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-4o,case_016,defi_trading_logic,LendingPool9105,reward_accounting_error,83,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-4o,case_017,patch_quality,Vault6604,missing_access_control,80,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-4o,case_018,security_audit,RewardPool6302,oracle_manipulation,94,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-4o,case_019,patch_quality,RewardPool9248,missing_access_control,81,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-4o,case_020,security_audit,Vault1924,amm_pricing_error,92,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-4o,case_021,security_audit,LendingPool3877,missing_access_control,93,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-4o,case_022,patch_quality,RewardPool4039,missing_access_control,83,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-4o,case_023,security_audit,LendingPool2031,reentrancy,95,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-4o,case_024,security_audit,Vault3604,reentrancy,84,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_025,security_audit,LendingPool8500,missing_access_control,71,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_026,security_audit,Vault8194,reentrancy,59,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_027,defi_trading_logic,Vault7926,reward_accounting_error,62,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_028,defi_trading_logic,SimpleAMM6083,oracle_manipulation,66,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_029,defi_trading_logic,SimpleAMM4509,amm_pricing_error,69,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_030,patch_quality,LendingPool4646,amm_pricing_error,74,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_031,security_audit,LendingPool1318,missing_access_control,62,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_032,patch_quality,SimpleAMM3615,reward_accounting_error,56,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_033,patch_quality,OracleVault4386,amm_pricing_error,59,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_034,defi_trading_logic,RewardPool1381,reward_accounting_error,69,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_035,defi_trading_logic,RewardPool6059,reentrancy,56,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_036,patch_quality,RewardPool1939,missing_access_control,81,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_037,defi_trading_logic,Vault9287,reward_accounting_error,63,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_038,defi_trading_logic,Vault7695,reentrancy,19,0,1,1,FAIL,Benchmark: model missed the injected vulnerability
+run_28ac3a02,GPT-3.5,case_039,security_audit,OracleVault8126,missing_access_control,64,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_040,patch_quality,OracleVault2724,amm_pricing_error,80,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_041,security_audit,SimpleAMM9672,reentrancy,65,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_042,patch_quality,OracleVault8265,missing_access_control,68,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_043,defi_trading_logic,RewardPool9535,reentrancy,34,0,1,0,FAIL,Benchmark: model missed the injected vulnerability
+run_28ac3a02,GPT-3.5,case_044,defi_trading_logic,Vault7060,missing_access_control,70,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_045,defi_trading_logic,OracleVault1195,reward_accounting_error,77,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_046,security_audit,OracleVault3623,amm_pricing_error,12,0,1,1,FAIL,Benchmark: model missed the injected vulnerability
+run_28ac3a02,GPT-3.5,case_047,defi_trading_logic,OracleVault1280,missing_access_control,61,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,GPT-3.5,case_048,patch_quality,OracleVault6801,missing_access_control,64,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_049,patch_quality,OracleVault7094,amm_pricing_error,83,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_050,security_audit,SimpleAMM3547,oracle_manipulation,83,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_051,defi_trading_logic,RewardPool9313,oracle_manipulation,97,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_052,defi_trading_logic,LendingPool3381,oracle_manipulation,85,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_053,defi_trading_logic,OracleVault1539,reward_accounting_error,91,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_054,patch_quality,RewardPool8562,reentrancy,94,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_055,defi_trading_logic,LendingPool5841,missing_access_control,94,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_056,security_audit,RewardPool9049,amm_pricing_error,87,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_057,defi_trading_logic,Vault4747,reward_accounting_error,83,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_058,defi_trading_logic,RewardPool4917,oracle_manipulation,96,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_059,security_audit,Vault6209,amm_pricing_error,96,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_060,security_audit,Vault2698,oracle_manipulation,91,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_061,defi_trading_logic,Vault6128,oracle_manipulation,93,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_062,security_audit,LendingPool3637,amm_pricing_error,86,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_063,patch_quality,RewardPool5818,amm_pricing_error,94,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_064,security_audit,OracleVault4765,oracle_manipulation,91,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_065,defi_trading_logic,OracleVault3989,amm_pricing_error,97,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_066,defi_trading_logic,Vault4113,amm_pricing_error,83,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_067,security_audit,SimpleAMM2481,amm_pricing_error,85,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_068,patch_quality,OracleVault5191,amm_pricing_error,90,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_069,security_audit,LendingPool3627,oracle_manipulation,97,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_070,security_audit,Vault2113,reentrancy,83,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_071,patch_quality,SimpleAMM1374,reentrancy,89,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Gemini 1.5 Flash,case_072,security_audit,RewardPool8747,reward_accounting_error,95,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_073,defi_trading_logic,RewardPool4272,oracle_manipulation,78,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_074,defi_trading_logic,RewardPool3119,reward_accounting_error,92,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_075,defi_trading_logic,LendingPool2651,missing_access_control,74,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_076,patch_quality,OracleVault9426,oracle_manipulation,87,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_077,patch_quality,Vault3688,reentrancy,30,0,1,2,FAIL,Benchmark: model missed the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_078,defi_trading_logic,Vault3988,reentrancy,87,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_079,security_audit,SimpleAMM6774,missing_access_control,20,0,1,2,FAIL,Benchmark: model missed the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_080,patch_quality,LendingPool9279,missing_access_control,92,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_081,defi_trading_logic,SimpleAMM3478,missing_access_control,72,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_082,defi_trading_logic,SimpleAMM8212,oracle_manipulation,86,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_083,patch_quality,Vault3382,amm_pricing_error,91,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_084,patch_quality,Vault1338,missing_access_control,87,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_085,security_audit,LendingPool1764,reentrancy,72,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_086,defi_trading_logic,OracleVault6273,reward_accounting_error,86,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_087,security_audit,LendingPool2402,reward_accounting_error,8,0,1,2,FAIL,Benchmark: model missed the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_088,patch_quality,OracleVault1414,reward_accounting_error,0,0,1,1,FAIL,Benchmark: model missed the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_089,patch_quality,LendingPool2585,amm_pricing_error,85,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_090,patch_quality,Vault8831,amm_pricing_error,82,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_091,patch_quality,LendingPool1933,reentrancy,81,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_092,defi_trading_logic,OracleVault2405,reward_accounting_error,92,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_093,defi_trading_logic,Vault3703,amm_pricing_error,74,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_094,defi_trading_logic,LendingPool3238,amm_pricing_error,76,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_095,patch_quality,RewardPool3786,missing_access_control,87,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,NVIDIA: Nemotron 3 4.3,case_096,defi_trading_logic,SimpleAMM8208,oracle_manipulation,14,0,1,0,FAIL,Benchmark: model missed the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_097,security_audit,Vault7649,missing_access_control,77,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_098,defi_trading_logic,SimpleAMM9541,reentrancy,18,0,1,1,FAIL,Benchmark: model missed the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_099,defi_trading_logic,LendingPool5596,reward_accounting_error,87,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_100,patch_quality,SimpleAMM3560,reentrancy,75,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_101,patch_quality,SimpleAMM4880,reentrancy,85,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_102,security_audit,OracleVault7841,amm_pricing_error,83,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_103,security_audit,SimpleAMM5290,oracle_manipulation,87,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_104,security_audit,OracleVault6314,amm_pricing_error,83,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_105,defi_trading_logic,Vault1598,oracle_manipulation,84,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_106,security_audit,OracleVault6055,reward_accounting_error,68,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_107,patch_quality,RewardPool8094,missing_access_control,66,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_108,defi_trading_logic,RewardPool9272,oracle_manipulation,83,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_109,defi_trading_logic,LendingPool7121,reward_accounting_error,72,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_110,security_audit,RewardPool3732,reward_accounting_error,80,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_111,patch_quality,RewardPool9053,amm_pricing_error,75,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_112,defi_trading_logic,RewardPool9752,amm_pricing_error,75,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_113,patch_quality,OracleVault9712,missing_access_control,69,1,1,1,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_114,defi_trading_logic,Vault2073,amm_pricing_error,75,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_115,security_audit,SimpleAMM4469,reward_accounting_error,11,0,1,0,FAIL,Benchmark: model missed the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_116,patch_quality,LendingPool8037,missing_access_control,72,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_117,security_audit,RewardPool8909,reentrancy,86,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_118,defi_trading_logic,RewardPool8431,oracle_manipulation,68,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_119,patch_quality,SimpleAMM5260,reward_accounting_error,86,1,1,0,PASS,Benchmark: model detected the injected vulnerability
+run_28ac3a02,Meta Llama 3,case_120,security_audit,RewardPool4748,missing_access_control,76,1,1,1,PASS,Benchmark: model detected the injected vulnerability

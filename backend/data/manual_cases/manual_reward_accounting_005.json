@@ -1,0 +1,23 @@
+{
+  "case_id": "manual_reward_accounting_005",
+  "test_type": "patch_quality",
+  "contract_name": "VulnerableRewardTradingPool",
+  "bugs": [
+    {
+      "id": "BUG-REWARD-001",
+      "type": "reward_accounting_error",
+      "severity": "high",
+      "line_hint": "claimRewards() calculates rewards from current stake without snapshots or reward index",
+      "expected_keywords": [
+        "reward accounting",
+        "flash loan",
+        "stake before claim",
+        "reward snapshot",
+        "reward index",
+        "double claim"
+      ],
+      "exploit_summary": "A user can stake immediately before claiming rewards and withdraw after, extracting unfair rewards.",
+      "suggested_fix": "Use accumulated reward-per-share accounting, staking duration rules, or snapshot balances before reward distribution."
+    }
+  ]
+}

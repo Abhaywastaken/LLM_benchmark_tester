@@ -1,0 +1,6 @@
+run_id,model,average_score,passed_cases,total_cases,pass_rate
+run_28ac3a02,GPT-4o,75.25,20,24,0.833
+run_28ac3a02,GPT-3.5,60.88,21,24,0.875
+run_28ac3a02,Gemini 1.5 Flash,90.12,24,24,1
+run_28ac3a02,NVIDIA: Nemotron 3,68.88,19,24,0.792
+run_28ac3a02,Meta Llama 3,72.54,22,24,0.917

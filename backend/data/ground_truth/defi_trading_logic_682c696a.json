@@ -1,0 +1,23 @@
+{
+  "case_id": "defi_trading_logic_682c696a",
+  "test_type": "defi_trading_logic",
+  "contract_name": "LendingPool696a",
+  "bugs": [
+    {
+      "id": "BUG-ORACLE-001",
+      "type": "oracle_manipulation",
+      "severity": "critical",
+      "line_hint": "maxBorrow(): uses AMM spotPrice() directly",
+      "expected_keywords": [
+        "oracle manipulation",
+        "spot price",
+        "TWAP",
+        "flash loan",
+        "manipulable",
+        "AMM oracle"
+      ],
+      "exploit_summary": "An attacker can manipulate AMM spot price, inflate collateral value, and borrow more than allowed.",
+      "suggested_fix": "Use a robust oracle such as TWAP, Chainlink-style feeds, or sanity checks."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "case_id": "manual_oracle_manipulation_001",
+  "test_type": "defi_trading_logic",
+  "contract_name": "VulnerableAMMSpotPriceOracle",
+  "bugs": [
+    {
+      "id": "BUG-ORACLE-001",
+      "type": "oracle_manipulation",
+      "severity": "critical",
+      "line_hint": "spotPriceETH() and maxBorrow() use live AMM reserves as the oracle",
+      "expected_keywords": [
+        "oracle manipulation",
+        "spot price",
+        "AMM oracle",
+        "flash loan",
+        "TWAP",
+        "manipulable price"
+      ],
+      "exploit_summary": "An attacker can manipulate AMM reserves temporarily, inflate collateral value, and borrow too much.",
+      "suggested_fix": "Use TWAP, Chainlink-style oracle, time-weighted prices, or sanity checks."
+    }
+  ]
+}

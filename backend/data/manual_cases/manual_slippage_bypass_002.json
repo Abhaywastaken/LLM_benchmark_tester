@@ -1,0 +1,23 @@
+{
+  "case_id": "manual_slippage_bypass_002",
+  "test_type": "defi_trading_logic",
+  "contract_name": "VulnerableDEXSlippageBypass",
+  "bugs": [
+    {
+      "id": "BUG-SLIPPAGE-001",
+      "type": "missing_slippage_protection",
+      "severity": "high",
+      "line_hint": "swapXForY() has no minAmountOut parameter",
+      "expected_keywords": [
+        "slippage",
+        "minAmountOut",
+        "sandwich",
+        "front-running",
+        "MEV",
+        "price impact"
+      ],
+      "exploit_summary": "Users cannot enforce a minimum output amount, making them vulnerable to sandwich/front-running losses.",
+      "suggested_fix": "Add a minAmountOut parameter and revert if amountOut is below that value."
+    }
+  ]
+}

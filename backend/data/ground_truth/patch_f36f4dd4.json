@@ -1,0 +1,23 @@
+{
+  "case_id": "patch_f36f4dd4",
+  "test_type": "patch_quality",
+  "contract_name": "RewardPool4dd4",
+  "bugs": [
+    {
+      "id": "BUG-ACCOUNTING-001",
+      "type": "reward_accounting_error",
+      "severity": "high",
+      "line_hint": "claimRewards(): rewardPool/user claim state is not updated",
+      "expected_keywords": [
+        "double claim",
+        "accounting",
+        "rewardPool",
+        "claim",
+        "state update",
+        "repeatedly claim"
+      ],
+      "exploit_summary": "A user can repeatedly call claimRewards() because claimed rewards are not tracked and rewardPool is not reduced.",
+      "suggested_fix": "Track claimed rewards per user or reduce rewardPool and update accounting before transfer."
+    }
+  ]
+}

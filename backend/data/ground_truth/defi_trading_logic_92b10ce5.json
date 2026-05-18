@@ -1,0 +1,23 @@
+{
+  "case_id": "defi_trading_logic_92b10ce5",
+  "test_type": "defi_trading_logic",
+  "contract_name": "SimpleAMM0ce5",
+  "bugs": [
+    {
+      "id": "BUG-AMM-001",
+      "type": "amm_pricing_error",
+      "severity": "high",
+      "line_hint": "getAmountOut(): uses naive spot price instead of x*y=k formula",
+      "expected_keywords": [
+        "constant product",
+        "price impact",
+        "AMM",
+        "spot price",
+        "reserve",
+        "slippage"
+      ],
+      "exploit_summary": "Large swaps receive too much output because the formula ignores price impact.",
+      "suggested_fix": "Use constant-product pricing: amountOut = reserveY - (reserveX * reserveY)/(reserveX + amountInAfterFee)."
+    }
+  ]
+}

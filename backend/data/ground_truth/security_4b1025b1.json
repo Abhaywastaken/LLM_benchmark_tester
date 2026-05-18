@@ -1,0 +1,22 @@
+{
+  "case_id": "security_4b1025b1",
+  "test_type": "security_audit",
+  "contract_name": "OracleVault25b1",
+  "bugs": [
+    {
+      "id": "BUG-ACCESS-001",
+      "type": "missing_access_control",
+      "severity": "critical",
+      "line_hint": "setOracle(): anyone can change the oracle",
+      "expected_keywords": [
+        "access control",
+        "onlyOwner",
+        "unauthorized",
+        "setOracle",
+        "owner"
+      ],
+      "exploit_summary": "Any address can replace the price oracle and manipulate borrowing power.",
+      "suggested_fix": "Restrict setOracle() with onlyOwner or role-based access control."
+    }
+  ]
+}

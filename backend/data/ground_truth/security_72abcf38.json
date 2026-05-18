@@ -1,0 +1,21 @@
+{
+  "case_id": "security_72abcf38",
+  "test_type": "security_audit",
+  "contract_name": "Vaultcf38",
+  "bugs": [
+    {
+      "id": "BUG-REENTRANCY-001",
+      "type": "reentrancy",
+      "severity": "critical",
+      "line_hint": "withdraw(): external call occurs before balance is reduced",
+      "expected_keywords": [
+        "reentrancy",
+        "external call before state update",
+        "checks-effects-interactions",
+        "call before balance update"
+      ],
+      "exploit_summary": "An attacker contract can reenter withdraw() during msg.sender.call before balances[msg.sender] is reduced.",
+      "suggested_fix": "Update balances before the external call and/or use a reentrancy guard."
+    }
+  ]
+}

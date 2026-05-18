@@ -1,0 +1,322 @@
+1. VulnerableAMM_SpotPriceOracle.sol
+Bug type
+
+oracle_manipulation
+
+What model should catch
+
+The lending logic uses the AMM’s instant spot price directly. This can be manipulated with a large swap or flash loan.
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract VulnerableAMMSpotPriceOracle {
+    uint256 public reserveETH;
+    uint256 public reserveUSDC;
+
+    mapping(address => uint256) public collateralETH;
+    mapping(address => uint256) public debtUSDC;
+
+    constructor(uint256 initialETH, uint256 initialUSDC) {
+        reserveETH = initialETH;
+        reserveUSDC = initialUSDC;
+    }
+
+    function depositCollateral() external payable {
+        collateralETH[msg.sender] += msg.value;
+    }
+
+    function spotPriceETH() public view returns (uint256) {
+        require(reserveETH > 0, "empty reserve");
+        return reserveUSDC * 1e18 / reserveETH;
+    }
+
+    function maxBorrow(address user) public view returns (uint256) {
+        uint256 ethPrice = spotPriceETH();
+
+        return collateralETH[user] * ethPrice * 70 / 100 / 1e18;
+    }
+
+    function borrowUSDC(uint256 amount) external {
+        require(amount <= maxBorrow(msg.sender), "too much borrow");
+
+        debtUSDC[msg.sender] += amount;
+    }
+
+    function swapETHForUSDC() external payable returns (uint256 amountOut) {
+        require(msg.value > 0, "no ETH");
+
+        uint256 ethIn = msg.value;
+        amountOut = ethIn * reserveUSDC / reserveETH;
+
+        reserveETH += ethIn;
+        reserveUSDC -= amountOut;
+    }
+}
+
+Ground truth:
+
+{
+  "case_id": "manual_oracle_manipulation_001",
+  "contract_name": "VulnerableAMMSpotPriceOracle",
+  "bug_type": "oracle_manipulation",
+  "severity": "critical",
+  "expected_keywords": [
+    "oracle manipulation",
+    "spot price",
+    "AMM oracle",
+    "flash loan",
+    "TWAP",
+    "manipulable price"
+  ],
+  "expected_finding": "The contract uses a manipulable AMM spot price as an oracle for borrow limits.",
+  "expected_fix": "Use TWAP, Chainlink-style oracle, time-weighted prices, or sanity checks."
+}
+2. VulnerableDEX_SlippageBypass.sol
+Bug type
+
+missing_slippage_protection
+
+What model should catch
+
+The swap function allows trades without a minAmountOut, so users can receive much less than expected.
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract VulnerableDEXSlippageBypass {
+    mapping(address => uint256) public tokenXBalance;
+    mapping(address => uint256) public tokenYBalance;
+
+    uint256 public reserveX = 1_000_000 ether;
+    uint256 public reserveY = 1_000_000 ether;
+
+    function depositTokenX(uint256 amount) external {
+        tokenXBalance[msg.sender] += amount;
+    }
+
+    function getAmountOut(uint256 amountIn) public view returns (uint256) {
+        uint256 amountInWithFee = amountIn * 997 / 1000;
+        return reserveY * amountInWithFee / (reserveX + amountInWithFee);
+    }
+
+    function swapXForY(uint256 amountIn) external returns (uint256 amountOut) {
+        require(tokenXBalance[msg.sender] >= amountIn, "insufficient X");
+
+        amountOut = getAmountOut(amountIn);
+
+        tokenXBalance[msg.sender] -= amountIn;
+        tokenYBalance[msg.sender] += amountOut;
+
+        reserveX += amountIn;
+        reserveY -= amountOut;
+    }
+}
+
+Ground truth:
+
+{
+  "case_id": "manual_slippage_bypass_002",
+  "contract_name": "VulnerableDEXSlippageBypass",
+  "bug_type": "missing_slippage_protection",
+  "severity": "high",
+  "expected_keywords": [
+    "slippage",
+    "minAmountOut",
+    "sandwich",
+    "front-running",
+    "MEV",
+    "price impact"
+  ],
+  "expected_finding": "The swap function does not allow users to specify a minimum acceptable output amount.",
+  "expected_fix": "Add a minAmountOut parameter and revert if amountOut is below that value."
+}
+3. VulnerablePerpFunding.sol
+Bug type
+
+funding_rate_manipulation
+
+What model should catch
+
+The funding rate can be updated by anyone and is based on a single manipulable price input.
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract VulnerablePerpFunding {
+    mapping(address => int256) public positionSize;
+    mapping(address => int256) public fundingDebt;
+
+    int256 public fundingRate;
+    int256 public lastMarkPrice;
+    int256 public lastIndexPrice;
+
+    function openPosition(int256 size) external {
+        positionSize[msg.sender] += size;
+        fundingDebt[msg.sender] += size * fundingRate;
+    }
+
+    function updateFundingRate(int256 markPrice, int256 indexPrice) external {
+        lastMarkPrice = markPrice;
+        lastIndexPrice = indexPrice;
+
+        fundingRate = (markPrice - indexPrice) / 100;
+    }
+
+    function settleFunding(address trader) external {
+        int256 payment = positionSize[trader] * fundingRate;
+        fundingDebt[trader] += payment;
+    }
+}
+
+Ground truth:
+
+{
+  "case_id": "manual_funding_rate_manipulation_003",
+  "contract_name": "VulnerablePerpFunding",
+  "bug_type": "funding_rate_manipulation",
+  "severity": "critical",
+  "expected_keywords": [
+    "funding rate",
+    "oracle manipulation",
+    "access control",
+    "mark price",
+    "index price",
+    "manipulable"
+  ],
+  "expected_finding": "Anyone can update the funding rate using arbitrary mark and index prices.",
+  "expected_fix": "Restrict funding updates to trusted keepers and use robust oracle/TWAP price feeds."
+}
+4. VulnerableLiquidation.sol
+Bug type
+
+incorrect_liquidation_check
+
+What model should catch
+
+The liquidation logic compares raw collateral and debt without normalizing decimals/prices.
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract VulnerableLiquidation {
+    mapping(address => uint256) public collateralAmount;
+    mapping(address => uint256) public debtAmount;
+
+    uint256 public constant LIQUIDATION_THRESHOLD = 80;
+
+    function depositCollateral(uint256 amount) external {
+        collateralAmount[msg.sender] += amount;
+    }
+
+    function borrow(uint256 amount) external {
+        debtAmount[msg.sender] += amount;
+    }
+
+    function isLiquidatable(address user) public view returns (bool) {
+        if (collateralAmount[user] == 0) {
+            return true;
+        }
+
+        uint256 ratio = debtAmount[user] * 100 / collateralAmount[user];
+
+        return ratio > LIQUIDATION_THRESHOLD;
+    }
+
+    function liquidate(address user) external {
+        require(isLiquidatable(user), "not liquidatable");
+
+        collateralAmount[user] = 0;
+        debtAmount[user] = 0;
+    }
+}
+
+Ground truth:
+
+{
+  "case_id": "manual_bad_liquidation_004",
+  "contract_name": "VulnerableLiquidation",
+  "bug_type": "incorrect_liquidation_check",
+  "severity": "high",
+  "expected_keywords": [
+    "liquidation",
+    "collateral ratio",
+    "price oracle",
+    "decimals",
+    "normalization",
+    "debt"
+  ],
+  "expected_finding": "The liquidation check compares raw collateral and debt amounts without pricing or decimal normalization.",
+  "expected_fix": "Use oracle prices, normalize token decimals, and calculate collateral value versus debt value."
+}
+5. VulnerableRewardTradingPool.sol
+Bug type
+
+reward_accounting_error
+
+What model should catch
+
+Rewards are calculated from current stake, but users can deposit right before claiming and withdraw after, extracting rewards unfairly.
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract VulnerableRewardTradingPool {
+    mapping(address => uint256) public stakeBalance;
+    mapping(address => uint256) public rewardsClaimed;
+
+    uint256 public totalStake;
+    uint256 public rewardPool;
+
+    function stake() external payable {
+        require(msg.value > 0, "no stake");
+
+        stakeBalance[msg.sender] += msg.value;
+        totalStake += msg.value;
+    }
+
+    function addTradingRewards() external payable {
+        rewardPool += msg.value;
+    }
+
+    function claimRewards() external {
+        require(totalStake > 0, "no stake");
+        require(stakeBalance[msg.sender] > 0, "not staker");
+
+        uint256 reward = rewardPool * stakeBalance[msg.sender] / totalStake;
+
+        rewardsClaimed[msg.sender] += reward;
+
+        (bool ok, ) = msg.sender.call{value: reward}("");
+        require(ok, "transfer failed");
+    }
+
+    function withdrawStake(uint256 amount) external {
+        require(stakeBalance[msg.sender] >= amount, "too much");
+
+        stakeBalance[msg.sender] -= amount;
+        totalStake -= amount;
+
+        (bool ok, ) = msg.sender.call{value: amount}("");
+        require(ok, "transfer failed");
+    }
+}
+
+Ground truth:
+
+{
+  "case_id": "manual_reward_accounting_005",
+  "contract_name": "VulnerableRewardTradingPool",
+  "bug_type": "reward_accounting_error",
+  "severity": "high",
+  "expected_keywords": [
+    "reward accounting",
+    "flash loan",
+    "stake before claim",
+    "reward snapshot",
+    "reward index",
+    "double claim"
+  ],
+  "expected_finding": "Rewards are distributed based on current stake without snapshotting or reward-per-share accounting.",
+  "expected_fix": "Use accumulated reward-per-share accounting, staking duration rules, or snapshot balances before reward distribution."
+}

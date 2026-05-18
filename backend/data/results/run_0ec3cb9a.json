@@ -1,0 +1,236 @@
+{
+  "run_id": "run_0ec3cb9a",
+  "cases": [
+    {
+      "case_id": "security_8c24fda8",
+      "test_type": "security_audit",
+      "contract_name": "OracleVaultfda8",
+      "solidity_code": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\ninterface IPriceOracle {\n    function price() external view returns (uint256);\n}\n\ncontract OracleVaultfda8 {\n    address public owner;\n    IPriceOracle public oracle;\n    mapping(address => uint256) public collateral;\n\n    constructor(address initialOracle) {\n        owner = msg.sender;\n        oracle = IPriceOracle(initialOracle);\n    }\n\n    function depositCollateral() external payable {\n        collateral[msg.sender] += msg.value;\n    }\n\n    // BUG: missing onlyOwner access control\n    function setOracle(address newOracle) external {\n        oracle = IPriceOracle(newOracle);\n    }\n\n    function borrowingPower(address user) external view returns (uint256) {\n        return collateral[user] * oracle.price() / 1e18;\n    }\n}\n",
+      "bugs": [
+        {
+          "id": "BUG-ACCESS-001",
+          "type": "missing_access_control",
+          "severity": "critical",
+          "line_hint": "setOracle(): anyone can change the oracle",
+          "expected_keywords": [
+            "access control",
+            "onlyOwner",
+            "unauthorized",
+            "setOracle",
+            "owner"
+          ],
+          "exploit_summary": "Any address can replace the price oracle and manipulate borrowing power.",
+          "suggested_fix": "Restrict setOracle() with onlyOwner or role-based access control."
+        }
+      ]
+    },
+    {
+      "case_id": "defi_trading_logic_0d52a899",
+      "test_type": "defi_trading_logic",
+      "contract_name": "SimpleAMMa899",
+      "solidity_code": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\ncontract SimpleAMMa899 {\n    uint256 public reserveX;\n    uint256 public reserveY;\n    uint256 public constant FEE_BPS = 25;\n\n    constructor(uint256 x, uint256 y) {\n        reserveX = x;\n        reserveY = y;\n    }\n\n    function getAmountOut(uint256 amountIn) public view returns (uint256) {\n        // BUG: pricing ignores price impact and constant product invariant.\n        // It uses a naive spot price based on old reserves.\n        uint256 amountAfterFee = amountIn * (10000 - FEE_BPS) / 10000;\n        return amountAfterFee * reserveY / reserveX;\n    }\n\n    function swapXForY(uint256 amountIn) external returns (uint256 amountOut) {\n        amountOut = getAmountOut(amountIn);\n\n        reserveX += amountIn;\n        reserveY -= amountOut;\n    }\n}\n",
+      "bugs": [
+        {
+          "id": "BUG-AMM-001",
+          "type": "amm_pricing_error",
+          "severity": "high",
+          "line_hint": "getAmountOut(): uses naive spot price instead of x*y=k formula",
+          "expected_keywords": [
+            "constant product",
+            "price impact",
+            "AMM",
+            "spot price",
+            "reserve",
+            "slippage"
+          ],
+          "exploit_summary": "Large swaps receive too much output because the formula ignores price impact.",
+          "suggested_fix": "Use constant-product pricing: amountOut = reserveY - (reserveX * reserveY)/(reserveX + amountInAfterFee)."
+        }
+      ]
+    },
+    {
+      "case_id": "patch_fbc515f2",
+      "test_type": "patch_quality",
+      "contract_name": "RewardPool15f2",
+      "solidity_code": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\ncontract RewardPool15f2 {\n    mapping(address => uint256) public shares;\n    uint256 public totalShares;\n    uint256 public rewardPool;\n\n    function stake() external payable {\n        shares[msg.sender] += msg.value;\n        totalShares += msg.value;\n    }\n\n    function addRewards() external payable {\n        rewardPool += msg.value;\n    }\n\n    function claimRewards() external {\n        require(shares[msg.sender] > 0, \"no shares\");\n\n        uint256 payout = rewardPool * shares[msg.sender] / totalShares;\n\n        // BUG: rewardPool is not reduced and user can repeatedly claim.\n        (bool ok, ) = msg.sender.call{value: payout}(\"\");\n        require(ok, \"reward transfer failed\");\n    }\n}\n",
+      "bugs": [
+        {
+          "id": "BUG-ACCOUNTING-001",
+          "type": "reward_accounting_error",
+          "severity": "high",
+          "line_hint": "claimRewards(): rewardPool/user claim state is not updated",
+          "expected_keywords": [
+            "double claim",
+            "accounting",
+            "rewardPool",
+            "claim",
+            "state update",
+            "repeatedly claim"
+          ],
+          "exploit_summary": "A user can repeatedly call claimRewards() because claimed rewards are not tracked and rewardPool is not reduced.",
+          "suggested_fix": "Track claimed rewards per user or reduce rewardPool and update accounting before transfer."
+        }
+      ]
+    }
+  ],
+  "scores": [
+    {
+      "model_id": "openai_strong",
+      "case_id": "security_8c24fda8",
+      "test_type": "security_audit",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "Missed missing_access_control: +0"
+      ]
+    },
+    {
+      "model_id": "openai_fast",
+      "case_id": "security_8c24fda8",
+      "test_type": "security_audit",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "Missed missing_access_control: +0"
+      ]
+    },
+    {
+      "model_id": "gemini",
+      "case_id": "security_8c24fda8",
+      "test_type": "security_audit",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "Missed missing_access_control: +0"
+      ]
+    },
+    {
+      "model_id": "groq",
+      "case_id": "security_8c24fda8",
+      "test_type": "security_audit",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "Missed missing_access_control: +0"
+      ]
+    },
+    {
+      "model_id": "openai_strong",
+      "case_id": "defi_trading_logic_0d52a899",
+      "test_type": "defi_trading_logic",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "Missed amm_pricing_error: +0"
+      ]
+    },
+    {
+      "model_id": "openai_fast",
+      "case_id": "defi_trading_logic_0d52a899",
+      "test_type": "defi_trading_logic",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "Missed amm_pricing_error: +0"
+      ]
+    },
+    {
+      "model_id": "gemini",
+      "case_id": "defi_trading_logic_0d52a899",
+      "test_type": "defi_trading_logic",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "Missed amm_pricing_error: +0"
+      ]
+    },
+    {
+      "model_id": "groq",
+      "case_id": "defi_trading_logic_0d52a899",
+      "test_type": "defi_trading_logic",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "Missed amm_pricing_error: +0"
+      ]
+    },
+    {
+      "model_id": "openai_strong",
+      "case_id": "patch_fbc515f2",
+      "test_type": "patch_quality",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "Missed reward_accounting_error: +0"
+      ]
+    },
+    {
+      "model_id": "openai_fast",
+      "case_id": "patch_fbc515f2",
+      "test_type": "patch_quality",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "Missed reward_accounting_error: +0"
+      ]
+    },
+    {
+      "model_id": "gemini",
+      "case_id": "patch_fbc515f2",
+      "test_type": "patch_quality",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "Missed reward_accounting_error: +0"
+      ]
+    },
+    {
+      "model_id": "groq",
+      "case_id": "patch_fbc515f2",
+      "test_type": "patch_quality",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "Missed reward_accounting_error: +0"
+      ]
+    }
+  ],
+  "raw_answers": {
+    "openai_strong::security_8c24fda8": "ERROR: OpenAI call failed for model gpt-4.1: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}",
+    "openai_fast::security_8c24fda8": "ERROR: OpenAI call failed for model gpt-4.1-mini: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}",
+    "gemini::security_8c24fda8": "ERROR: Gemini call failed for model gemini-1.5-flash: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods.",
+    "groq::security_8c24fda8": "ERROR: Groq call failed for model llama-3.3-70b-versatile: Error code: 401 - {'error': {'message': 'Invalid API Key', 'type': 'invalid_request_error', 'code': 'invalid_api_key'}}",
+    "openai_strong::defi_trading_logic_0d52a899": "ERROR: OpenAI call failed for model gpt-4.1: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}",
+    "openai_fast::defi_trading_logic_0d52a899": "ERROR: OpenAI call failed for model gpt-4.1-mini: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}",
+    "gemini::defi_trading_logic_0d52a899": "ERROR: Gemini call failed for model gemini-1.5-flash: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods.",
+    "groq::defi_trading_logic_0d52a899": "ERROR: Groq call failed for model llama-3.3-70b-versatile: Error code: 401 - {'error': {'message': 'Invalid API Key', 'type': 'invalid_request_error', 'code': 'invalid_api_key'}}",
+    "openai_strong::patch_fbc515f2": "ERROR: OpenAI call failed for model gpt-4.1: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}",
+    "openai_fast::patch_fbc515f2": "ERROR: OpenAI call failed for model gpt-4.1-mini: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}",
+    "gemini::patch_fbc515f2": "ERROR: Gemini call failed for model gemini-1.5-flash: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods.",
+    "groq::patch_fbc515f2": "ERROR: Groq call failed for model llama-3.3-70b-versatile: Error code: 401 - {'error': {'message': 'Invalid API Key', 'type': 'invalid_request_error', 'code': 'invalid_api_key'}}"
+  }
+}

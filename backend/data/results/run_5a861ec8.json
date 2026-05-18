@@ -1,0 +1,454 @@
+{
+  "run_id": "run_5a861ec8",
+  "cases": [
+    {
+      "case_id": "manual_bad_liquidation_004",
+      "test_type": "security_audit",
+      "contract_name": "VulnerableLiquidation",
+      "solidity_code": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\ncontract VulnerableLiquidation {\n    mapping(address => uint256) public collateralAmount;\n    mapping(address => uint256) public debtAmount;\n\n    uint256 public constant LIQUIDATION_THRESHOLD = 80;\n\n    function depositCollateral(uint256 amount) external {\n        collateralAmount[msg.sender] += amount;\n    }\n\n    function borrow(uint256 amount) external {\n        debtAmount[msg.sender] += amount;\n    }\n\n    function isLiquidatable(address user) public view returns (bool) {\n        if (collateralAmount[user] == 0) {\n            return true;\n        }\n\n        uint256 ratio = debtAmount[user] * 100 / collateralAmount[user];\n\n        return ratio > LIQUIDATION_THRESHOLD;\n    }\n\n    function liquidate(address user) external {\n        require(isLiquidatable(user), \"not liquidatable\");\n\n        collateralAmount[user] = 0;\n        debtAmount[user] = 0;\n    }\n}\n",
+      "bugs": [
+        {
+          "id": "BUG-LIQUIDATION-001",
+          "type": "incorrect_liquidation_check",
+          "severity": "high",
+          "line_hint": "isLiquidatable() compares raw collateral and debt amounts without pricing",
+          "expected_keywords": [
+            "liquidation",
+            "collateral ratio",
+            "price oracle",
+            "decimals",
+            "normalization",
+            "debt"
+          ],
+          "exploit_summary": "The liquidation check compares raw amounts without oracle prices or decimal normalization.",
+          "suggested_fix": "Use oracle prices, normalize token decimals, and compare collateral value against debt value."
+        }
+      ]
+    },
+    {
+      "case_id": "manual_funding_rate_manipulation_003",
+      "test_type": "defi_trading_logic",
+      "contract_name": "VulnerablePerpFunding",
+      "solidity_code": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\ncontract VulnerablePerpFunding {\n    mapping(address => int256) public positionSize;\n    mapping(address => int256) public fundingDebt;\n\n    int256 public fundingRate;\n    int256 public lastMarkPrice;\n    int256 public lastIndexPrice;\n\n    function openPosition(int256 size) external {\n        positionSize[msg.sender] += size;\n        fundingDebt[msg.sender] += size * fundingRate;\n    }\n\n    function updateFundingRate(int256 markPrice, int256 indexPrice) external {\n        lastMarkPrice = markPrice;\n        lastIndexPrice = indexPrice;\n\n        fundingRate = (markPrice - indexPrice) / 100;\n    }\n\n    function settleFunding(address trader) external {\n        int256 payment = positionSize[trader] * fundingRate;\n        fundingDebt[trader] += payment;\n    }\n}\n",
+      "bugs": [
+        {
+          "id": "BUG-FUNDING-001",
+          "type": "funding_rate_manipulation",
+          "severity": "critical",
+          "line_hint": "updateFundingRate() is external and accepts arbitrary prices",
+          "expected_keywords": [
+            "funding rate",
+            "oracle manipulation",
+            "access control",
+            "mark price",
+            "index price",
+            "manipulable"
+          ],
+          "exploit_summary": "Anyone can update the funding rate with arbitrary mark and index prices.",
+          "suggested_fix": "Restrict updates to trusted keepers and use robust oracle/TWAP price feeds."
+        }
+      ]
+    },
+    {
+      "case_id": "manual_oracle_manipulation_001",
+      "test_type": "defi_trading_logic",
+      "contract_name": "VulnerableAMMSpotPriceOracle",
+      "solidity_code": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\ncontract VulnerableAMMSpotPriceOracle {\n    uint256 public reserveETH;\n    uint256 public reserveUSDC;\n\n    mapping(address => uint256) public collateralETH;\n    mapping(address => uint256) public debtUSDC;\n\n    constructor(uint256 initialETH, uint256 initialUSDC) {\n        reserveETH = initialETH;\n        reserveUSDC = initialUSDC;\n    }\n\n    function depositCollateral() external payable {\n        collateralETH[msg.sender] += msg.value;\n    }\n\n    function spotPriceETH() public view returns (uint256) {\n        require(reserveETH > 0, \"empty reserve\");\n        return reserveUSDC * 1e18 / reserveETH;\n    }\n\n    function maxBorrow(address user) public view returns (uint256) {\n        uint256 ethPrice = spotPriceETH();\n        return collateralETH[user] * ethPrice * 70 / 100 / 1e18;\n    }\n\n    function borrowUSDC(uint256 amount) external {\n        require(amount <= maxBorrow(msg.sender), \"too much borrow\");\n        debtUSDC[msg.sender] += amount;\n    }\n\n    function swapETHForUSDC() external payable returns (uint256 amountOut) {\n        require(msg.value > 0, \"no ETH\");\n\n        uint256 ethIn = msg.value;\n        amountOut = ethIn * reserveUSDC / reserveETH;\n\n        reserveETH += ethIn;\n        reserveUSDC -= amountOut;\n    }\n}\n",
+      "bugs": [
+        {
+          "id": "BUG-ORACLE-001",
+          "type": "oracle_manipulation",
+          "severity": "critical",
+          "line_hint": "spotPriceETH() and maxBorrow() use live AMM reserves as the oracle",
+          "expected_keywords": [
+            "oracle manipulation",
+            "spot price",
+            "AMM oracle",
+            "flash loan",
+            "TWAP",
+            "manipulable price"
+          ],
+          "exploit_summary": "An attacker can manipulate AMM reserves temporarily, inflate collateral value, and borrow too much.",
+          "suggested_fix": "Use TWAP, Chainlink-style oracle, time-weighted prices, or sanity checks."
+        }
+      ]
+    },
+    {
+      "case_id": "manual_reward_accounting_005",
+      "test_type": "patch_quality",
+      "contract_name": "VulnerableRewardTradingPool",
+      "solidity_code": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\ncontract VulnerableRewardTradingPool {\n    mapping(address => uint256) public stakeBalance;\n    mapping(address => uint256) public rewardsClaimed;\n\n    uint256 public totalStake;\n    uint256 public rewardPool;\n\n    function stake() external payable {\n        require(msg.value > 0, \"no stake\");\n\n        stakeBalance[msg.sender] += msg.value;\n        totalStake += msg.value;\n    }\n\n    function addTradingRewards() external payable {\n        rewardPool += msg.value;\n    }\n\n    function claimRewards() external {\n        require(totalStake > 0, \"no stake\");\n        require(stakeBalance[msg.sender] > 0, \"not staker\");\n\n        uint256 reward = rewardPool * stakeBalance[msg.sender] / totalStake;\n\n        rewardsClaimed[msg.sender] += reward;\n\n        (bool ok, ) = msg.sender.call{value: reward}(\"\");\n        require(ok, \"transfer failed\");\n    }\n\n    function withdrawStake(uint256 amount) external {\n        require(stakeBalance[msg.sender] >= amount, \"too much\");\n\n        stakeBalance[msg.sender] -= amount;\n        totalStake -= amount;\n\n        (bool ok, ) = msg.sender.call{value: amount}(\"\");\n        require(ok, \"transfer failed\");\n    }\n}\n",
+      "bugs": [
+        {
+          "id": "BUG-REWARD-001",
+          "type": "reward_accounting_error",
+          "severity": "high",
+          "line_hint": "claimRewards() calculates rewards from current stake without snapshots or reward index",
+          "expected_keywords": [
+            "reward accounting",
+            "flash loan",
+            "stake before claim",
+            "reward snapshot",
+            "reward index",
+            "double claim"
+          ],
+          "exploit_summary": "A user can stake immediately before claiming rewards and withdraw after, extracting unfair rewards.",
+          "suggested_fix": "Use accumulated reward-per-share accounting, staking duration rules, or snapshot balances before reward distribution."
+        }
+      ]
+    },
+    {
+      "case_id": "manual_slippage_bypass_002",
+      "test_type": "defi_trading_logic",
+      "contract_name": "VulnerableDEXSlippageBypass",
+      "solidity_code": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\ncontract VulnerableDEXSlippageBypass {\n    mapping(address => uint256) public tokenXBalance;\n    mapping(address => uint256) public tokenYBalance;\n\n    uint256 public reserveX = 1_000_000 ether;\n    uint256 public reserveY = 1_000_000 ether;\n\n    function depositTokenX(uint256 amount) external {\n        tokenXBalance[msg.sender] += amount;\n    }\n\n    function getAmountOut(uint256 amountIn) public view returns (uint256) {\n        uint256 amountInWithFee = amountIn * 997 / 1000;\n        return reserveY * amountInWithFee / (reserveX + amountInWithFee);\n    }\n\n    function swapXForY(uint256 amountIn) external returns (uint256 amountOut) {\n        require(tokenXBalance[msg.sender] >= amountIn, \"insufficient X\");\n\n        amountOut = getAmountOut(amountIn);\n\n        tokenXBalance[msg.sender] -= amountIn;\n        tokenYBalance[msg.sender] += amountOut;\n\n        reserveX += amountIn;\n        reserveY -= amountOut;\n    }\n}\n",
+      "bugs": [
+        {
+          "id": "BUG-SLIPPAGE-001",
+          "type": "missing_slippage_protection",
+          "severity": "high",
+          "line_hint": "swapXForY() has no minAmountOut parameter",
+          "expected_keywords": [
+            "slippage",
+            "minAmountOut",
+            "sandwich",
+            "front-running",
+            "MEV",
+            "price impact"
+          ],
+          "exploit_summary": "Users cannot enforce a minimum output amount, making them vulnerable to sandwich/front-running losses.",
+          "suggested_fix": "Add a minAmountOut parameter and revert if amountOut is below that value."
+        }
+      ]
+    }
+  ],
+  "scores": [
+    {
+      "model_id": "Gemini 1.5 Flash",
+      "case_id": "manual_bad_liquidation_004",
+      "test_type": "security_audit",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: Gemini call failed for model gemini-1.5-flash: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods."
+      ]
+    },
+    {
+      "model_id": "NVIDIA: Nemotron 3",
+      "case_id": "manual_bad_liquidation_004",
+      "test_type": "security_audit",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: OpenRouter call failed for model nvidia/nemotron-3-nano-omni:free: Error code: 400 - {'error': {'message': 'nvidia/nemotron-3-nano-omni:free is not a valid model ID', 'code': 400}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+      ]
+    },
+    {
+      "model_id": "Meta Llama 3",
+      "case_id": "manual_bad_liquidation_004",
+      "test_type": "security_audit",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: OpenRouter call failed for model meta-llama/llama-3.1-8b-instruct:free: Error code: 404 - {'error': {'message': 'No endpoints found for meta-llama/llama-3.1-8b-instruct:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+      ]
+    },
+    {
+      "model_id": "DeepSeek R1 Free",
+      "case_id": "manual_bad_liquidation_004",
+      "test_type": "security_audit",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: OpenRouter call failed for model deepseek/deepseek-r1:free: Error code: 404 - {'error': {'message': 'No endpoints found for deepseek/deepseek-r1:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+      ]
+    },
+    {
+      "model_id": "Mistral 7B Free",
+      "case_id": "manual_bad_liquidation_004",
+      "test_type": "security_audit",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: OpenRouter call failed for model mistralai/mistral-7b-instruct:free: Error code: 404 - {'error': {'message': 'No endpoints found for mistralai/mistral-7b-instruct:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+      ]
+    },
+    {
+      "model_id": "Gemini 1.5 Flash",
+      "case_id": "manual_funding_rate_manipulation_003",
+      "test_type": "defi_trading_logic",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: Gemini call failed for model gemini-1.5-flash: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods."
+      ]
+    },
+    {
+      "model_id": "NVIDIA: Nemotron 3",
+      "case_id": "manual_funding_rate_manipulation_003",
+      "test_type": "defi_trading_logic",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: OpenRouter call failed for model nvidia/nemotron-3-nano-omni:free: Error code: 400 - {'error': {'message': 'nvidia/nemotron-3-nano-omni:free is not a valid model ID', 'code': 400}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+      ]
+    },
+    {
+      "model_id": "Meta Llama 3",
+      "case_id": "manual_funding_rate_manipulation_003",
+      "test_type": "defi_trading_logic",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: OpenRouter call failed for model meta-llama/llama-3.1-8b-instruct:free: Error code: 404 - {'error': {'message': 'No endpoints found for meta-llama/llama-3.1-8b-instruct:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+      ]
+    },
+    {
+      "model_id": "DeepSeek R1 Free",
+      "case_id": "manual_funding_rate_manipulation_003",
+      "test_type": "defi_trading_logic",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: OpenRouter call failed for model deepseek/deepseek-r1:free: Error code: 404 - {'error': {'message': 'No endpoints found for deepseek/deepseek-r1:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+      ]
+    },
+    {
+      "model_id": "Mistral 7B Free",
+      "case_id": "manual_funding_rate_manipulation_003",
+      "test_type": "defi_trading_logic",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: OpenRouter call failed for model mistralai/mistral-7b-instruct:free: Error code: 404 - {'error': {'message': 'No endpoints found for mistralai/mistral-7b-instruct:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+      ]
+    },
+    {
+      "model_id": "Gemini 1.5 Flash",
+      "case_id": "manual_oracle_manipulation_001",
+      "test_type": "defi_trading_logic",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: Gemini call failed for model gemini-1.5-flash: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods."
+      ]
+    },
+    {
+      "model_id": "NVIDIA: Nemotron 3",
+      "case_id": "manual_oracle_manipulation_001",
+      "test_type": "defi_trading_logic",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: OpenRouter call failed for model nvidia/nemotron-3-nano-omni:free: Error code: 400 - {'error': {'message': 'nvidia/nemotron-3-nano-omni:free is not a valid model ID', 'code': 400}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+      ]
+    },
+    {
+      "model_id": "Meta Llama 3",
+      "case_id": "manual_oracle_manipulation_001",
+      "test_type": "defi_trading_logic",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: OpenRouter call failed for model meta-llama/llama-3.1-8b-instruct:free: Error code: 404 - {'error': {'message': 'No endpoints found for meta-llama/llama-3.1-8b-instruct:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+      ]
+    },
+    {
+      "model_id": "DeepSeek R1 Free",
+      "case_id": "manual_oracle_manipulation_001",
+      "test_type": "defi_trading_logic",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: OpenRouter call failed for model deepseek/deepseek-r1:free: Error code: 404 - {'error': {'message': 'No endpoints found for deepseek/deepseek-r1:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+      ]
+    },
+    {
+      "model_id": "Mistral 7B Free",
+      "case_id": "manual_oracle_manipulation_001",
+      "test_type": "defi_trading_logic",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: OpenRouter call failed for model mistralai/mistral-7b-instruct:free: Error code: 404 - {'error': {'message': 'No endpoints found for mistralai/mistral-7b-instruct:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+      ]
+    },
+    {
+      "model_id": "Gemini 1.5 Flash",
+      "case_id": "manual_reward_accounting_005",
+      "test_type": "patch_quality",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: Gemini call failed for model gemini-1.5-flash: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods."
+      ]
+    },
+    {
+      "model_id": "NVIDIA: Nemotron 3",
+      "case_id": "manual_reward_accounting_005",
+      "test_type": "patch_quality",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: OpenRouter call failed for model nvidia/nemotron-3-nano-omni:free: Error code: 400 - {'error': {'message': 'nvidia/nemotron-3-nano-omni:free is not a valid model ID', 'code': 400}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+      ]
+    },
+    {
+      "model_id": "Meta Llama 3",
+      "case_id": "manual_reward_accounting_005",
+      "test_type": "patch_quality",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: OpenRouter call failed for model meta-llama/llama-3.1-8b-instruct:free: Error code: 404 - {'error': {'message': 'No endpoints found for meta-llama/llama-3.1-8b-instruct:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+      ]
+    },
+    {
+      "model_id": "DeepSeek R1 Free",
+      "case_id": "manual_reward_accounting_005",
+      "test_type": "patch_quality",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: OpenRouter call failed for model deepseek/deepseek-r1:free: Error code: 404 - {'error': {'message': 'No endpoints found for deepseek/deepseek-r1:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+      ]
+    },
+    {
+      "model_id": "Mistral 7B Free",
+      "case_id": "manual_reward_accounting_005",
+      "test_type": "patch_quality",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: OpenRouter call failed for model mistralai/mistral-7b-instruct:free: Error code: 404 - {'error': {'message': 'No endpoints found for mistralai/mistral-7b-instruct:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+      ]
+    },
+    {
+      "model_id": "Gemini 1.5 Flash",
+      "case_id": "manual_slippage_bypass_002",
+      "test_type": "defi_trading_logic",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: Gemini call failed for model gemini-1.5-flash: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods."
+      ]
+    },
+    {
+      "model_id": "NVIDIA: Nemotron 3",
+      "case_id": "manual_slippage_bypass_002",
+      "test_type": "defi_trading_logic",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: OpenRouter call failed for model nvidia/nemotron-3-nano-omni:free: Error code: 400 - {'error': {'message': 'nvidia/nemotron-3-nano-omni:free is not a valid model ID', 'code': 400}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+      ]
+    },
+    {
+      "model_id": "Meta Llama 3",
+      "case_id": "manual_slippage_bypass_002",
+      "test_type": "defi_trading_logic",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: OpenRouter call failed for model meta-llama/llama-3.1-8b-instruct:free: Error code: 404 - {'error': {'message': 'No endpoints found for meta-llama/llama-3.1-8b-instruct:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+      ]
+    },
+    {
+      "model_id": "DeepSeek R1 Free",
+      "case_id": "manual_slippage_bypass_002",
+      "test_type": "defi_trading_logic",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: OpenRouter call failed for model deepseek/deepseek-r1:free: Error code: 404 - {'error': {'message': 'No endpoints found for deepseek/deepseek-r1:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+      ]
+    },
+    {
+      "model_id": "Mistral 7B Free",
+      "case_id": "manual_slippage_bypass_002",
+      "test_type": "defi_trading_logic",
+      "score": 0.0,
+      "detected_bugs": 0,
+      "total_bugs": 1,
+      "false_positives": 0,
+      "notes": [
+        "ERROR: OpenRouter call failed for model mistralai/mistral-7b-instruct:free: Error code: 404 - {'error': {'message': 'No endpoints found for mistralai/mistral-7b-instruct:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+      ]
+    }
+  ],
+  "raw_answers": {
+    "Gemini 1.5 Flash::manual_bad_liquidation_004": "ERROR: Gemini call failed for model gemini-1.5-flash: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods.",
+    "NVIDIA: Nemotron 3::manual_bad_liquidation_004": "ERROR: OpenRouter call failed for model nvidia/nemotron-3-nano-omni:free: Error code: 400 - {'error': {'message': 'nvidia/nemotron-3-nano-omni:free is not a valid model ID', 'code': 400}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}",
+    "Meta Llama 3::manual_bad_liquidation_004": "ERROR: OpenRouter call failed for model meta-llama/llama-3.1-8b-instruct:free: Error code: 404 - {'error': {'message': 'No endpoints found for meta-llama/llama-3.1-8b-instruct:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}",
+    "DeepSeek R1 Free::manual_bad_liquidation_004": "ERROR: OpenRouter call failed for model deepseek/deepseek-r1:free: Error code: 404 - {'error': {'message': 'No endpoints found for deepseek/deepseek-r1:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}",
+    "Mistral 7B Free::manual_bad_liquidation_004": "ERROR: OpenRouter call failed for model mistralai/mistral-7b-instruct:free: Error code: 404 - {'error': {'message': 'No endpoints found for mistralai/mistral-7b-instruct:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}",
+    "Gemini 1.5 Flash::manual_funding_rate_manipulation_003": "ERROR: Gemini call failed for model gemini-1.5-flash: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods.",
+    "NVIDIA: Nemotron 3::manual_funding_rate_manipulation_003": "ERROR: OpenRouter call failed for model nvidia/nemotron-3-nano-omni:free: Error code: 400 - {'error': {'message': 'nvidia/nemotron-3-nano-omni:free is not a valid model ID', 'code': 400}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}",
+    "Meta Llama 3::manual_funding_rate_manipulation_003": "ERROR: OpenRouter call failed for model meta-llama/llama-3.1-8b-instruct:free: Error code: 404 - {'error': {'message': 'No endpoints found for meta-llama/llama-3.1-8b-instruct:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}",
+    "DeepSeek R1 Free::manual_funding_rate_manipulation_003": "ERROR: OpenRouter call failed for model deepseek/deepseek-r1:free: Error code: 404 - {'error': {'message': 'No endpoints found for deepseek/deepseek-r1:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}",
+    "Mistral 7B Free::manual_funding_rate_manipulation_003": "ERROR: OpenRouter call failed for model mistralai/mistral-7b-instruct:free: Error code: 404 - {'error': {'message': 'No endpoints found for mistralai/mistral-7b-instruct:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}",
+    "Gemini 1.5 Flash::manual_oracle_manipulation_001": "ERROR: Gemini call failed for model gemini-1.5-flash: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods.",
+    "NVIDIA: Nemotron 3::manual_oracle_manipulation_001": "ERROR: OpenRouter call failed for model nvidia/nemotron-3-nano-omni:free: Error code: 400 - {'error': {'message': 'nvidia/nemotron-3-nano-omni:free is not a valid model ID', 'code': 400}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}",
+    "Meta Llama 3::manual_oracle_manipulation_001": "ERROR: OpenRouter call failed for model meta-llama/llama-3.1-8b-instruct:free: Error code: 404 - {'error': {'message': 'No endpoints found for meta-llama/llama-3.1-8b-instruct:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}",
+    "DeepSeek R1 Free::manual_oracle_manipulation_001": "ERROR: OpenRouter call failed for model deepseek/deepseek-r1:free: Error code: 404 - {'error': {'message': 'No endpoints found for deepseek/deepseek-r1:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}",
+    "Mistral 7B Free::manual_oracle_manipulation_001": "ERROR: OpenRouter call failed for model mistralai/mistral-7b-instruct:free: Error code: 404 - {'error': {'message': 'No endpoints found for mistralai/mistral-7b-instruct:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}",
+    "Gemini 1.5 Flash::manual_reward_accounting_005": "ERROR: Gemini call failed for model gemini-1.5-flash: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods.",
+    "NVIDIA: Nemotron 3::manual_reward_accounting_005": "ERROR: OpenRouter call failed for model nvidia/nemotron-3-nano-omni:free: Error code: 400 - {'error': {'message': 'nvidia/nemotron-3-nano-omni:free is not a valid model ID', 'code': 400}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}",
+    "Meta Llama 3::manual_reward_accounting_005": "ERROR: OpenRouter call failed for model meta-llama/llama-3.1-8b-instruct:free: Error code: 404 - {'error': {'message': 'No endpoints found for meta-llama/llama-3.1-8b-instruct:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}",
+    "DeepSeek R1 Free::manual_reward_accounting_005": "ERROR: OpenRouter call failed for model deepseek/deepseek-r1:free: Error code: 404 - {'error': {'message': 'No endpoints found for deepseek/deepseek-r1:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}",
+    "Mistral 7B Free::manual_reward_accounting_005": "ERROR: OpenRouter call failed for model mistralai/mistral-7b-instruct:free: Error code: 404 - {'error': {'message': 'No endpoints found for mistralai/mistral-7b-instruct:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}",
+    "Gemini 1.5 Flash::manual_slippage_bypass_002": "ERROR: Gemini call failed for model gemini-1.5-flash: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods.",
+    "NVIDIA: Nemotron 3::manual_slippage_bypass_002": "ERROR: OpenRouter call failed for model nvidia/nemotron-3-nano-omni:free: Error code: 400 - {'error': {'message': 'nvidia/nemotron-3-nano-omni:free is not a valid model ID', 'code': 400}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}",
+    "Meta Llama 3::manual_slippage_bypass_002": "ERROR: OpenRouter call failed for model meta-llama/llama-3.1-8b-instruct:free: Error code: 404 - {'error': {'message': 'No endpoints found for meta-llama/llama-3.1-8b-instruct:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}",
+    "DeepSeek R1 Free::manual_slippage_bypass_002": "ERROR: OpenRouter call failed for model deepseek/deepseek-r1:free: Error code: 404 - {'error': {'message': 'No endpoints found for deepseek/deepseek-r1:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}",
+    "Mistral 7B Free::manual_slippage_bypass_002": "ERROR: OpenRouter call failed for model mistralai/mistral-7b-instruct:free: Error code: 404 - {'error': {'message': 'No endpoints found for mistralai/mistral-7b-instruct:free.', 'code': 404}, 'user_id': 'user_3DoXhmoMSVCMsy6Z1jqX9O8s3qX'}"
+  }
+}

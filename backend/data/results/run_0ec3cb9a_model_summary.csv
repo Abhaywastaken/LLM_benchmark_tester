@@ -1,0 +1,5 @@
+run_id,model,average_score,passed_cases,total_cases,pass_rate
+run_0ec3cb9a,openai_strong,0.0,0,3,0.0
+run_0ec3cb9a,openai_fast,0.0,0,3,0.0
+run_0ec3cb9a,gemini,0.0,0,3,0.0
+run_0ec3cb9a,groq,0.0,0,3,0.0

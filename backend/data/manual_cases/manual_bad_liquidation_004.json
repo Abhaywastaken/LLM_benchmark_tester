@@ -1,0 +1,23 @@
+{
+  "case_id": "manual_bad_liquidation_004",
+  "test_type": "security_audit",
+  "contract_name": "VulnerableLiquidation",
+  "bugs": [
+    {
+      "id": "BUG-LIQUIDATION-001",
+      "type": "incorrect_liquidation_check",
+      "severity": "high",
+      "line_hint": "isLiquidatable() compares raw collateral and debt amounts without pricing",
+      "expected_keywords": [
+        "liquidation",
+        "collateral ratio",
+        "price oracle",
+        "decimals",
+        "normalization",
+        "debt"
+      ],
+      "exploit_summary": "The liquidation check compares raw amounts without oracle prices or decimal normalization.",
+      "suggested_fix": "Use oracle prices, normalize token decimals, and compare collateral value against debt value."
+    }
+  ]
+}

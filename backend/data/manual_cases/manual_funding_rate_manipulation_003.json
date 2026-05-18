@@ -1,0 +1,23 @@
+{
+  "case_id": "manual_funding_rate_manipulation_003",
+  "test_type": "defi_trading_logic",
+  "contract_name": "VulnerablePerpFunding",
+  "bugs": [
+    {
+      "id": "BUG-FUNDING-001",
+      "type": "funding_rate_manipulation",
+      "severity": "critical",
+      "line_hint": "updateFundingRate() is external and accepts arbitrary prices",
+      "expected_keywords": [
+        "funding rate",
+        "oracle manipulation",
+        "access control",
+        "mark price",
+        "index price",
+        "manipulable"
+      ],
+      "exploit_summary": "Anyone can update the funding rate with arbitrary mark and index prices.",
+      "suggested_fix": "Restrict updates to trusted keepers and use robust oracle/TWAP price feeds."
+    }
+  ]
+}

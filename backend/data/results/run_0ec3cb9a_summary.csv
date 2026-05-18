@@ -1,0 +1,13 @@
+run_id,model,case_id,test_type,contract_name,bug_type,score,detected_bugs,total_bugs,false_positives,result,notes
+run_0ec3cb9a,openai_strong,security_8c24fda8,security_audit,OracleVaultfda8,missing_access_control,0.0,0,1,0,FAIL,Missed missing_access_control: +0
+run_0ec3cb9a,openai_fast,security_8c24fda8,security_audit,OracleVaultfda8,missing_access_control,0.0,0,1,0,FAIL,Missed missing_access_control: +0
+run_0ec3cb9a,gemini,security_8c24fda8,security_audit,OracleVaultfda8,missing_access_control,0.0,0,1,0,FAIL,Missed missing_access_control: +0
+run_0ec3cb9a,groq,security_8c24fda8,security_audit,OracleVaultfda8,missing_access_control,0.0,0,1,0,FAIL,Missed missing_access_control: +0
+run_0ec3cb9a,openai_strong,defi_trading_logic_0d52a899,defi_trading_logic,SimpleAMMa899,amm_pricing_error,0.0,0,1,0,FAIL,Missed amm_pricing_error: +0
+run_0ec3cb9a,openai_fast,defi_trading_logic_0d52a899,defi_trading_logic,SimpleAMMa899,amm_pricing_error,0.0,0,1,0,FAIL,Missed amm_pricing_error: +0
+run_0ec3cb9a,gemini,defi_trading_logic_0d52a899,defi_trading_logic,SimpleAMMa899,amm_pricing_error,0.0,0,1,0,FAIL,Missed amm_pricing_error: +0
+run_0ec3cb9a,groq,defi_trading_logic_0d52a899,defi_trading_logic,SimpleAMMa899,amm_pricing_error,0.0,0,1,0,FAIL,Missed amm_pricing_error: +0
+run_0ec3cb9a,openai_strong,patch_fbc515f2,patch_quality,RewardPool15f2,reward_accounting_error,0.0,0,1,0,FAIL,Missed reward_accounting_error: +0
+run_0ec3cb9a,openai_fast,patch_fbc515f2,patch_quality,RewardPool15f2,reward_accounting_error,0.0,0,1,0,FAIL,Missed reward_accounting_error: +0
+run_0ec3cb9a,gemini,patch_fbc515f2,patch_quality,RewardPool15f2,reward_accounting_error,0.0,0,1,0,FAIL,Missed reward_accounting_error: +0
+run_0ec3cb9a,groq,patch_fbc515f2,patch_quality,RewardPool15f2,reward_accounting_error,0.0,0,1,0,FAIL,Missed reward_accounting_error: +0
